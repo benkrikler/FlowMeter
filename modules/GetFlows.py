@@ -1,10 +1,9 @@
 import requests
 import json
-import datetime
+from datetime import datetime, timedelta
 
 REST_API_URL="https://api.flowdock.com/"
-
-#: r=requests.get("https://api.flowdock.com/flows/comet/icedust-in-general/messages",auth=("<private-token>","")); r.json()
+TIME_FORMAT="%Y-%m-%dT%H:%M:%S.%fZ"
 
 class Connection():
     """ A class to manage connecting to flowdock"""
@@ -20,30 +19,37 @@ class Connection():
                 flow=flow,
                 service=service)
 
-    def GetFlow(self,date_offset,organisation,flow):
+    def Request(self,url,**kwargs):
+            r=requests.get(url, auth=(self.token,""),params=kwargs); 
+            return r.json()
+
+    def GetMessages(self,date_offset,organisation,flow):
         """ Get all the flows since date """
         # prepare the target URL
         url=self.MakeURL(organisation,flow,"messages")
 
         # What's the date we want to stop at?
-        stop_time=datetime.datetime.now() - datetime.timedelta(hours=date_offset)
+        stop_time=datetime.now() - timedelta(hours=date_offset)
         print(stop_time)
 
         # Pull messages until we've reached the requested time offset
         reachedDesiredDate=False
         last_id=-1
+        new_messages=[]
         while(not reachedDesiredDate):
+            # Request a set of messages
             params={'limit':100}
             if last_id != -1: params['until_id']=last_id
-            r=requests.get(url, auth=(self.token,""),params=params); 
-            objects=r.json()
+            objects=self.Request(url,**params)
+
+            # Reverse iterate  to check if we've  got all that we  need to reach
+            # our requested time limit
             for obj in reversed(objects):
-                #print(obj.keys())
-                created_at=datetime.datetime.strptime(obj["created_at"],"%Y-%m-%dT%H:%M:%S.%fZ")
+                created_at=datetime.strptime(obj["created_at"],TIME_FORMAT)
                 last_id=int(obj["id"])
-                print(str(created_at),obj["created_at"], str(stop_time), created_at < stop_time)
                 if created_at < stop_time:
                     reachedDesiredDate=True
                     break
-                print(obj["user"], obj["content"])
-            #reachedDesiredDate=True
+                # Valid new message so keep it
+                new_messages.append(obj)
+        return new_messages
