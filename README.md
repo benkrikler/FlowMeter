@@ -23,13 +23,13 @@ Code structure
 1. Get latest activity
    - Latest is since last update (probably nightly)
    - Stored locally (how do you best store json objects ?)
-3. Select outputs
+2. Select outputs
    - Outputs state the products they need
-2. Make products
+3. Make products
    - Init each producer
    - For each JSON object, run each producer
    - Finish each producer
-3. Prepare outputs
+4. Prepare outputs
    - Prepares html, text etc 
    - Uploads to web-page or sends out an email
 
