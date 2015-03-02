@@ -2,21 +2,30 @@
 
 import configparser
 import sys
-from modules import BaseClasses, TallyProducts
+from modules import BaseClasses, TallyProducts, TextEmail
 from modules import GetFlows
 import exceptions
+from collections import defaultdict
 
 default_config={
 	'date_offset':24 # hours to look for messages
         }
 config = configparser.ConfigParser(default_config)
 
+class FlowData():
+    messages={}
+    users={}
+#    threads=[]
+
 def GetAllFlows(date_offset, token, flows):
     flowdock=GetFlows.Connection(token)
-    flowData={}
+    flowData=defaultdict(FlowData)
     for org_flow in flows:
-	    [org,flow]=org_flow.split("/",1)
-	    flowData[org_flow] = flowdock.GetMessages(date_offset,org,flow)
+        [org,flow]=org_flow.split("/",1)
+        flowData[org_flow].messages = flowdock.GetMessages(date_offset,org,flow)
+        flowData[org_flow].users = flowdock.GetUsers(org,flow)
+        print(type(flowData[org_flow].users))
+        #flowData[org_flow].threads = flowdock.GetThreads(org,flow)
     return flowData
 
 def GetInstances(class_list, base_class):
@@ -46,14 +55,7 @@ def DeduceProducts(outputs):
     # Now get the products ready
     return GetInstances(requested_products,BaseClasses.BaseProduct)
 
-if __name__ == "__main__":
-
-    # Get the configuration
-    config_file="flowmeter.cfg"
-    if len(sys.argv) > 1:
-        config_file=sys.argv[1]
-    config.read(config_file)
-
+def Main(config):
     # Check config file
 
     # Deduce the products we need to make given the requested outputs
@@ -66,13 +68,21 @@ if __name__ == "__main__":
     date_offset=config.getfloat("source","date_offset")
     flowData = GetAllFlows(date_offset,config.get("source","token"), config.get("source","flows").split())
 
-    # testing
-    for flow_name, message_list in flowData.iteritems():
-	    print("%s has %d new messages" % (flow_name, len(message_list)))
- 
     # Make each requested product 
     for name, product in products.iteritems():
         product.ProcessData(flowData)
 
     # Lastly, compile and send / upload each output
+    for name, output in outputs.iteritems():
+        output.CompileOutput(flowData.keys(),config,products)
 
+
+if __name__ == "__main__":
+    # Get the configuration
+    config_file="flowmeter.cfg"
+    if len(sys.argv) > 1:
+        config_file=sys.argv[1]
+    config.read(config_file)
+
+    # Now run the program
+    Main(config)

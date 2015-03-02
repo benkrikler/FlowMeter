@@ -35,7 +35,7 @@ class Connection():
         # Pull messages until we've reached the requested time offset
         reachedDesiredDate=False
         last_id=-1
-        new_messages=[]
+        new_messages={}
         while(not reachedDesiredDate):
             # Request a set of messages
             params={'limit':100}
@@ -51,5 +51,14 @@ class Connection():
                     reachedDesiredDate=True
                     break
                 # Valid new message so keep it
-                new_messages.append(obj)
+                new_messages[obj["id"]]=(obj)
         return new_messages
+
+    def GetUsers(self,organisation,flow):
+        """ Get all users for a flow """
+        # prepare the target URL
+        url=self.MakeURL(organisation,flow,"users")
+
+        # get the users list
+        objs= self.Request(url)
+        return dict(zip( [ obj['id'] for obj in objs], objs ))

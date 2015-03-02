@@ -3,6 +3,13 @@ URLS
 Get all messages from an organisation and from a flow:
  "https://<private-token>@api.flowdock.com/flows/comet/icedust-in-general/messages"
 
+Configuration
+-------------
+User details:
+ - Username, tok[width=0.7\textwidth]ens
+Which dfig:phase_2}
+\caption{esired outputsthe transport beamline will be built and both the stopping target and detectector systems will be placed there.}
+
 Outputs
 -------
 Would like to see:
@@ -27,14 +34,9 @@ Code structure
    - Outputs state the products they need
 3. Make products
    - Init each producer
+
    - For each JSON object, run each producer
    - Finish each producer
 4. Prepare outputs
    - Prepares html, text etc 
    - Uploads to web-page or sends out an email
-
-Configuration
--------------
-User details:
- - Username, tokens
-Which desired outputs
