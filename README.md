@@ -1,17 +1,20 @@
-URLS
+FlowMeter
 ----
-Get all messages from an organisation and from a flow:
- "https://<private-token>@api.flowdock.com/flows/comet/icedust-in-general/messages"
+A tool to sumarize set of [FlowDock](www.flowdock.com) flows.
 
 Configuration
 -------------
 User details:
- - Username, tok[width=0.7\textwidth]ens
-Which dfig:phase_2}
-\caption{esired outputsthe transport beamline will be built and both the stopping target and detectector systems will be placed there.}
+ - Username, private token
+Flowdock source
+ - List of flows
+ - Number of hours to retrieve messages from
+Outputs:
+ - A list of Outputs to run. Currently only (Plain)TextEmail is (partially) implemented.
 
 Outputs
 -------
+(NOTE: This is only partially implemented at this point, 4 March 2015)
 Would like to see:
 - Number of comments in each flow
 - Comparison to last fortnight's activity
@@ -34,7 +37,6 @@ Code structure
    - Outputs state the products they need
 3. Make products
    - Init each producer
-
    - For each JSON object, run each producer
    - Finish each producer
 4. Prepare outputs
