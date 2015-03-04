@@ -1,6 +1,6 @@
 FlowMeter
 ----
-A tool to sumarize set of [FlowDock](www.flowdock.com) flows.
+A tool to sumarize set of [FlowDock](https://www.flowdock.com) flows.
 
 Configuration
 -------------
