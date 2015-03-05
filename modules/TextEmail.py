@@ -14,6 +14,8 @@ class TextEmail(BaseClasses.BaseOutput):
         return url
 
     def MakeTagsTable(self,tags_tally,flow):
+        if len(tags_tally[flow]) == 0:
+            return "Nothing here..."
         output=""
         for tag,count in tags_tally[flow]:
             output+="* {:<20} {: <3} ({})\n".format( tag,
@@ -22,6 +24,8 @@ class TextEmail(BaseClasses.BaseOutput):
         return output
 
     def MakeThreadsTable(self,threads_tally,flow):
+        if len(threads_tally[flow]) == 0:
+            return "No threads this time..."
         output=""
         for thread,count,tags,title in threads_tally[flow]:
             if count<3: break
