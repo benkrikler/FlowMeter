@@ -35,7 +35,7 @@ class Connection():
 
         # What's the date we want to stop at?
         stop_time=datetime.now() - timedelta(hours=date_offset)
-        print(stop_time)
+        #print(stop_time)
 
         # Pull messages until we've reached the requested time offset
         reachedDesiredDate=False
@@ -60,7 +60,7 @@ class Connection():
                 new_messages[obj["id"]]=(obj)
                 self.GetThreadHeads([ thread_re.match(tag).group(1) for tag in obj["tags"] if thread_re.match(tag) ],
                 organisation,flow)
-        print(obj["tags"])
+        #print(obj["tags"])
         return new_messages
 
     def GetUsers(self,organisation,flow):
