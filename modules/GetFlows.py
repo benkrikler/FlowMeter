@@ -1,6 +1,9 @@
+from retry import *
 import requests
 import json
 from datetime import datetime, timedelta
+import re
+from collections import defaultdict
 
 REST_API_URL="https://api.flowdock.com/"
 TIME_FORMAT="%Y-%m-%dT%H:%M:%S.%fZ"
@@ -11,6 +14,7 @@ class Connection():
     def __init__(self, token):
         self.token=token
         self.decoder=json.JSONDecoder()
+        self.threads=defaultdict(dict)
 
     def MakeURL(self,organisation,flow,service):
         return "{base}/flows/{organisation}/{flow}/{service}".format(
@@ -19,9 +23,10 @@ class Connection():
                 flow=flow,
                 service=service)
 
+    @retry(requests.exceptions.ConnectionError, tries=4, delay=3, backoff=2)
     def Request(self,url,**kwargs):
-            r=requests.get(url, auth=(self.token,""),params=kwargs); 
-            return r.json()
+        r=requests.get(url, auth=(self.token,""),params=kwargs); 
+        return r.json()
 
     def GetMessages(self,date_offset,organisation,flow):
         """ Get all the flows since date """
@@ -36,6 +41,7 @@ class Connection():
         reachedDesiredDate=False
         last_id=-1
         new_messages={}
+        thread_re=re.compile(r"influx:(\d+)")
         while(not reachedDesiredDate):
             # Request a set of messages
             params={'limit':100}
@@ -52,6 +58,9 @@ class Connection():
                     break
                 # Valid new message so keep it
                 new_messages[obj["id"]]=(obj)
+                self.GetThreadHeads([ thread_re.match(tag).group(1) for tag in obj["tags"] if thread_re.match(tag) ],
+                organisation,flow)
+        print(obj["tags"])
         return new_messages
 
     def GetUsers(self,organisation,flow):
@@ -62,3 +71,14 @@ class Connection():
         # get the users list
         objs= self.Request(url)
         return dict(zip( [ obj['id'] for obj in objs], objs ))
+
+    def GetThreadHeads(self,threads,organisation,flow):
+        url=self.MakeURL(organisation,flow,"messages/")
+        for thread in threads:
+            if thread in self.threads[organisation+"/"+flow].keys(): continue
+            obj=self.Request(url+str(thread))
+            self.threads[organisation+"/"+flow][thread]=obj
+
+    def GetThreads(self,organisation,flow):
+        return self.threads[organisation+"/"+flow]
+

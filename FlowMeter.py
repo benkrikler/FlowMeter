@@ -15,7 +15,7 @@ config = configparser.ConfigParser(default_config)
 class FlowData():
     messages={}
     users={}
-#    threads=[]
+    threads=[]
 
 def GetAllFlows(date_offset, token, flows):
     flowdock=GetFlows.Connection(token)
@@ -24,8 +24,7 @@ def GetAllFlows(date_offset, token, flows):
         [org,flow]=org_flow.split("/",1)
         flowData[org_flow].messages = flowdock.GetMessages(date_offset,org,flow)
         flowData[org_flow].users = flowdock.GetUsers(org,flow)
-        print(type(flowData[org_flow].users))
-        #flowData[org_flow].threads = flowdock.GetThreads(org,flow)
+        flowData[org_flow].threads = flowdock.GetThreads(org,flow)
     return flowData
 
 def GetInstances(class_list, base_class):
