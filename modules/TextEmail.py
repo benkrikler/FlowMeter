@@ -70,11 +70,13 @@ ${thread_table}
 ---- Made using FlowMeter ( github.com/BenKrikler/FlowMeter )
         """
         
+        #############
         # Email the message
-        print(complete)
+        #############
+        #print(type(complete))
 
         # Create a text/plain message
-        msg = MIMEText(complete,'plain','utf-8')
+        msg = MIMEText(complete.encode('ascii','ignore'))
 
         # me == the sender's email address
         # you == the recipient's email address
@@ -82,11 +84,15 @@ ${thread_table}
         To=config.get("output","to")
         Subject="[FlowMeter] "+datetime.today().strftime("%d-%b-%Y %Z")+"\n"
         msg['Subject'] = Subject
-        msg['From'] = From
-        msg['To'] = To
+        #msg['From'] = From
+        #msg['To'] = To
 
         # Send the message via our own SMTP server, but don't include the
         # envelope header.
         s = smtplib.SMTP('localhost')
-        s.sendmail(From, To.split(","), msg.as_string())
+        print(msg)
+        s.set_debuglevel(True)
+        print(To.split())
+        
+        s.sendmail(From, To.split(), msg.as_string())
         s.quit()
