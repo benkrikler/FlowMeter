@@ -1,16 +1,15 @@
 import BaseClasses
 from string import Template
-from datetime import datetime
+from datetime import datetime,timedelta
 import smtplib
 from email.mime.text import MIMEText
-
 
 class TextEmail(BaseClasses.BaseOutput):
     def __init__(self):
         BaseClasses.BaseOutput.__init__(self,['TallyTags','LargestThread','SimpleSummaryData'])
 
     def MakeURL(self,flow,**kwargs):
-        url="https://www.flowdock.com/app/{0}?filter=all".format(flow)
+        url="www.flowdock.com/app/{0}?filter=all".format(flow)
         url+="".join([ "&{0}={1}".format(key,value) for key, value in kwargs.iteritems()])
         return url
 
@@ -40,7 +39,7 @@ class TextEmail(BaseClasses.BaseOutput):
         output="""
 ${flow}
 --------
-There have been ${n_messages} new messages in the last ${hours} hours
+There have been ${n_messages} new messages in the ${hours} hours since ${start}
 
 = Tags =
 ${tags_table}
@@ -55,11 +54,14 @@ ${thread_table}
         template=Template(output)
         complete="Summary of FlowDock activity"
         complete+=" for "+datetime.today().strftime("%A %d-%b-%Y %Z")+"\n"
+        hours=config.get('source','date_offset')
         for flow in flows:
             params={
                     'flow':flow,
                     'n_messages':products['SimpleSummaryData'].n_messages[flow],
-                    'hours':config.get('source','date_offset'),
+                    'hours': hours,
+                    'start':(datetime.now() -
+                            timedelta(hours=int(hours))).strftime("%c"),
                     'tags_table':self.MakeTagsTable(products['TallyTags'].tags,flow),
                     'mentions_table':self.MakeTagsTable(products['TallyTags'].mentions,flow),
                     'thread_table':self.MakeThreadsTable(products['LargestThread'].threads,flow)
