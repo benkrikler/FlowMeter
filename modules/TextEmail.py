@@ -88,7 +88,8 @@ ${thread_table}
         # you == the recipient's email address
         From=config.get("output","from")
         To=config.get("output","to")
-        Subject="[FlowMeter] "+datetime.today().strftime("%d-%b-%Y %Z")+"\n"
+        Subject=config.get("output","subject_tag")
+        Subject+=datetime.today().strftime("%d-%b-%Y %Z")+"\n"
         msg['Subject'] = Subject
         #msg['From'] = From
         #msg['To'] = To
