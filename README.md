@@ -4,13 +4,25 @@ A tool to sumarize set of [FlowDock](https://www.flowdock.com) flows.
 
 Configuration
 -------------
-User details:
- - Username, private token
-Flowdock source
- - List of flows
- - Number of hours to retrieve messages from
-Outputs:
- - A list of Outputs to run. Currently only (Plain)TextEmail is (partially) implemented.
+Configuration is done using python's ConfigParser and the file name for the
+config should be passed on the command line as the only option.
+
+The following is an example config file:
+```cfg
+# myConfig.cfg
+[source]
+token= <your flowdock private token>
+flows= < space separated list of flows (including the organisation) >
+date_offset= < the number of hours to look for messages from >
+
+[output]
+outputs=<A space separated list of output modules to run.  Currentl only TextEmail is available>
+from=< The email address of the sender >
+subject_tag=< The subject tag to be prefixed to the email, useful for inbox
+filtering. >
+to=< A space separted list of email addresses to send the outputs to >
+
+```
 
 Outputs
 -------
