@@ -97,7 +97,9 @@ class LargestThread(BaseClasses.BaseProduct):
                               key=operator.itemgetter(1))
             for thread_id,count in ids:
                 content=data.threads[thread_id]["content"]
-                content=" ".join(content.split()[0:10])
+                if not isinstance(content,basestring): continue
+                content=content.split()
+                content=" ".join(content[0:10]) + ( r"..." if len(content) > 10 else "" )
                 threads.append( (thread_id, count,
                                  self.tag_filter.Apply(thread_tags[thread_id],
                                                        data.users),
