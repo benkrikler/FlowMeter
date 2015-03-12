@@ -31,7 +31,7 @@ class TextEmail(BaseClasses.BaseOutput):
             if count<3: break
             tmp=""
             url=self.MakeURL(flow+"/messages/"+str(thread))
-            tmp+=u"* \"{:<50}...\"\n"
+            tmp+=u"* \"{}\"\n"
             tmp+=u"     Replies: {: <3}, Tags:{}\n"
             tmp+=u"{}\n\n"
             output+=tmp.format( title, count, ", ".join(tags), url)
