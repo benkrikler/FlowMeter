@@ -28,6 +28,7 @@ class TallyTags(BaseClasses.BaseProduct):
 
     def ProcessData(self, flowData):
         mention_re=re.compile(r":user:(\d+)")
+        everyone_re=re.compile(r":user:(everyone|everybody|all|anyone|anybody)")
         thread_re=re.compile(r"influx:(\d+)")
         unread_re=re.compile(r":unread:(\d+)")
 
@@ -52,6 +53,8 @@ class TallyTags(BaseClasses.BaseProduct):
                     user= flowData[flow].users[user_id]
                    # print(user['id'],user['nick'])
                     self.mentions[flow].append(("@"+user['nick'],count) )
+                elif everyone_re.match(tag): 
+                    self.mentions[flow].append(("@everyone",count) )
                 elif thread_re.match(tag): continue
                 elif tag == ":thread": continue
                 elif unread_re.match(tag): continue
