@@ -37,9 +37,7 @@ class TextEmail(BaseClasses.BaseOutput):
             output+=tmp.format( title, count, ", ".join(tags), url)
         return output
 
-
-    def CompileOutput(self,flows,config, products):
-        # Prepare the message
+    def MakeFlowSection(self,flow,config, products):
         output="""
 ${flow}
 --------
@@ -56,26 +54,29 @@ ${thread_table}
 
 """
         template=Template(output)
+        hours=config.get('source','date_offset')
+        params={
+                'flow':flow,
+                'n_messages':products['SimpleSummaryData'].n_messages[flow],
+                'hours': hours,
+                'start':(datetime.now() -
+                    timedelta(hours=int(hours))).strftime("%c"),
+                'tags_table':self.MakeTagsTable(products['TallyTags'].tags,flow),
+                'mentions_table':self.MakeTagsTable(products['TallyTags'].mentions,flow),
+                'thread_table':self.MakeThreadsTable(products['LargestThread'].threads,flow)
+                }
+        return template.substitute(params)
+
+    def CompileOutput(self,flows,config, products):
+        # Prepare the message
         complete="Summary of FlowDock activity"
         complete+=" for "+datetime.today().strftime("%A %d-%b-%Y %Z")+"\n"
-        hours=config.get('source','date_offset')
         for flow in flows:
-            params={
-                    'flow':flow,
-                    'n_messages':products['SimpleSummaryData'].n_messages[flow],
-                    'hours': hours,
-                    'start':(datetime.now() -
-                            timedelta(hours=int(hours))).strftime("%c"),
-                    'tags_table':self.MakeTagsTable(products['TallyTags'].tags,flow),
-                    'mentions_table':self.MakeTagsTable(products['TallyTags'].mentions,flow),
-                    'thread_table':self.MakeThreadsTable(products['LargestThread'].threads,flow)
-                    }
-            complete+=template.substitute(params)
-
+            complete+=self.MakeFlowSection(flow,config,products)
         complete+="""
 ---- Made using FlowMeter ( github.com/BenKrikler/FlowMeter )
         """
-        
+
         #############
         # Email the message
         #############
@@ -100,6 +101,6 @@ ${thread_table}
         print(msg)
         s.set_debuglevel(True)
         print(To.split())
-        
+
         s.sendmail(From, To.split(), msg.as_string())
         s.quit()
