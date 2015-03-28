@@ -79,7 +79,7 @@ def Main(config):
 
     # Make each requested product 
     for name, product in products.iteritems():
-        product.ProcessData(flowData)
+        product.ProcessData(flowData,config)
 
     # Lastly, compile and send / upload each output
     for name, output in outputs.iteritems():

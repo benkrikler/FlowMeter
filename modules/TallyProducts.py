@@ -26,11 +26,14 @@ class TallyTags(BaseClasses.BaseProduct):
         self.threads  = defaultdict(list,"")
         self.mentions = defaultdict(list)
 
-    def ProcessData(self, flowData):
+    def ProcessData(self, flowData,config):
         mention_re=re.compile(r":user:(\d+)")
         everyone_re=re.compile(r":user:(everyone|everybody|all|anyone|anybody)")
         thread_re=re.compile(r"influx:(\d+)")
         unread_re=re.compile(r":unread:(\d+)")
+        skip_tags=[]
+        if config.has_option("source","skip_tags"):
+                skip_tags=config.get("source","skip_tags").split()
 
         # tally up all tags
         tags={}
@@ -47,7 +50,8 @@ class TallyTags(BaseClasses.BaseProduct):
             # Ought to do this in the last loop for speed
             #print(type(tags),tags)
             for tag, count in tags[flow]:
-                if mention_re.match(tag):
+                if tag in skip_tags: continue
+                elif mention_re.match(tag):
                     user_id=int(mention_re.match(tag).group(1))
                    # print(user_id)
                     user= flowData[flow].users[user_id]
@@ -63,7 +67,7 @@ class TallyTags(BaseClasses.BaseProduct):
 
 
 class SimpleSummaryData(BaseClasses.BaseProduct):
-    def ProcessData(self, flowData):
+    def ProcessData(self, flowData,config):
         self.n_messages={}
         self.n_users={}
         for flow, data in flowData.iteritems():
@@ -78,7 +82,7 @@ class LargestThread(BaseClasses.BaseProduct):
         self.tag_filter=TagsFilter()
 
 
-    def ProcessData(self, flowData):
+    def ProcessData(self, flowData,config):
         # Get the list of threads
         thread_re=re.compile(r"influx:(\d+)")
         for flow, data in flowData.iteritems():

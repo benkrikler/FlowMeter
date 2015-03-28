@@ -1,7 +1,7 @@
 class BaseProduct(object):
     def __init__(self):
         pass
-    def ProcessData(self,flowData):
+    def ProcessData(self,flowData,config):
         raise NotImplementedError( 
                 "ProcessData() is not implemented for " +self.__class__.__name__)
 

@@ -7,7 +7,7 @@ class FlowEmails(BaseClasses.BaseProduct):
         self.emails = {}
         self.join_urls = {}
 
-    def ProcessData(self, flowData):
+    def ProcessData(self, flowData,config):
         """ Pick out the emails and urls to communicate to flowdock with """
         for flow, data in flowData.iteritems():
             self.emails[flow]=data.info['email']
