@@ -42,7 +42,7 @@ class TextEmail(BaseClasses.BaseOutput):
 
     def MakeFlowSection(self,flow,config, products):
         n_msg=products['SimpleSummaryData'].n_messages[flow]
-        if n_msg<1: return ""
+        if n_msg<1: return None
         hours=config.get('source','date_offset')
 
         output=flow+"\n"
@@ -98,13 +98,22 @@ and tag it with the force write to: death-star.luke+use_force@jedis.flowdock.com
         # Prepare the message
         complete="Summary of FlowDock activity"
         complete+=" for "+datetime.today().strftime("%A %d-%b-%Y %Z")+"\n\n"
+        had_activity=False
         for flow in flows:
-            complete+=self.MakeFlowSection(flow,config,products)
+            section=self.MakeFlowSection(flow,config,products)
+            if section:
+                had_activity=True
+                complete+=section
         complete+="\n"
         complete+=self.MakeFlowEmails(flows,products['FlowEmails'])
         complete+="""
 ---- Made using FlowMeter ( github.com/BenKrikler/FlowMeter )
         """
+
+        # Do we want to continue (was there activity)?
+        if not had_activity:
+            print "There was no activity today, so nothing to report"
+            return
 
         #############
         # Email the message
