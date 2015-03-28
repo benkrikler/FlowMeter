@@ -82,3 +82,10 @@ class Connection():
     def GetThreads(self,organisation,flow):
         return self.threads[organisation+"/"+flow]
 
+    def GetFlows(self):
+        url=REST_API_URL+"/flows/all"
+        objs= self.Request(url,users=1)
+        for obj in objs: 
+                if obj['access_mode']!="organization":
+                        objs.remove(obj)
+        return objs

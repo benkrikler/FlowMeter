@@ -17,8 +17,7 @@ class FlowData():
     users={}
     threads=[]
 
-def GetAllFlows(date_offset, token, flows):
-    flowdock=GetFlows.Connection(token)
+def GetAllFlows(date_offset, flowdock, flows):
     flowData=defaultdict(FlowData)
     for org_flow in flows:
         [org,flow]=org_flow.split("/",1)
@@ -63,9 +62,18 @@ def Main(config):
     products=DeduceProducts(outputs)
     print("Products that will be created: "+ str(products.keys()))
 
+    # Get all available flows for this token that are organisation wide:
+    flowdock=GetFlows.Connection(config.get("source","token"))
+    allFlows=flowdock.GetFlows()
+
     # Get all new messages for each requested flow
     date_offset=config.getfloat("source","date_offset")
-    flowData = GetAllFlows(date_offset,config.get("source","token"), config.get("source","flows").split())
+    if config.has_option("source","all_flows") and config.getboolean("source","all_flows"):
+            flows=[ flow['organization']['parameterized_name'] +"/"+ flow['parameterized_name'] for flow in allFlows ]
+    else: 
+            flows=config.get("source","flows").split()
+    print flows
+    flowData = GetAllFlows(date_offset,flowdock,flows )
 
     # Make each requested product 
     for name, product in products.iteritems():
