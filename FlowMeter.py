@@ -75,6 +75,10 @@ def Main(config):
             flows=allFlows
     else: 
             flows=[ flow for flow in allFlows if flow['organization']['parameterized_name'] +"/"+ flow['parameterized_name'] in config.get("source","flows").split() ]
+    if config.has_option("source","skip_flows"):
+            skip_flows=config.get("source","skip_flows").split()
+            flows=[ flow for flow in flows if flow['organization']['parameterized_name'] +"/"+flow['parameterized_name'] not in skip_flows]
+    print("Flows to be summarised: "+str([ flow['parameterized_name'] for flow in flows]))
     flowData = GetAllFlows(date_offset,flowdock,flows )
 
     # Make each requested product 
