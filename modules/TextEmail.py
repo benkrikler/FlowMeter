@@ -4,9 +4,12 @@ from datetime import datetime,timedelta
 import smtplib
 from email.mime.text import MIMEText
 
+def Underline(str,char="-"):
+    return ''.join([char]*len(str))
+
 class TextEmail(BaseClasses.BaseOutput):
     def __init__(self):
-        BaseClasses.BaseOutput.__init__(self,['TallyTags','LargestThread','SimpleSummaryData'])
+        BaseClasses.BaseOutput.__init__(self,['TallyTags','LargestThread','SimpleSummaryData','FlowEmails'])
 
     def MakeURL(self,flow,**kwargs):
         url="www.flowdock.com/app/{0}?filter=all".format(flow)
@@ -43,7 +46,7 @@ class TextEmail(BaseClasses.BaseOutput):
         hours=config.get('source','date_offset')
 
         output=flow+"\n"
-        output+=''.join(['-']*len(flow))
+        output+=Underline(flow)
         output+="\n"
         output+="There ha" + ("s" if n_msg==1 else "ve") + " been "
         output+=str(n_msg)+" new message" + ("s" if n_msg > 1 else "")
@@ -75,13 +78,24 @@ class TextEmail(BaseClasses.BaseOutput):
 
         return output
 
+    def MakeFlowEmails(self,flows,email_product):
+        output="Access details for all Flows:\n"
+        output+=Underline(output)+"\n"
+        for flow in flows:
+            output+=flow+":\n"
+            output+="  Join: "+email_product.join_urls[flow]+"\n"
+            output+="  Email: "+email_product.emails[flow]+"\n"
+            output+="\n"
+        return output
+
     def CompileOutput(self,flows,config, products):
         # Prepare the message
         complete="Summary of FlowDock activity"
         complete+=" for "+datetime.today().strftime("%A %d-%b-%Y %Z")+"\n\n"
         for flow in flows:
             complete+=self.MakeFlowSection(flow,config,products)
-        #complete+=self.MakeFlowEmails(flows)
+        complete+="\n"
+        complete+=self.MakeFlowEmails(flows,products['FlowEmails'])
         complete+="""
 ---- Made using FlowMeter ( github.com/BenKrikler/FlowMeter )
         """
