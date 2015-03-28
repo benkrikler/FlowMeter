@@ -15,7 +15,7 @@ class TextEmail(BaseClasses.BaseOutput):
 
     def MakeTagsTable(self,tags_tally,flow):
         if len(tags_tally[flow]) == 0:
-            return "Nothing here..."
+            return None
         output=""
         for tag,count in tags_tally[flow]:
             output+="* {:<20} {: <3} ({})\n".format( tag,
@@ -25,7 +25,7 @@ class TextEmail(BaseClasses.BaseOutput):
 
     def MakeThreadsTable(self,threads_tally,flow):
         if len(threads_tally[flow]) == 0:
-            return "No threads this time..."
+            return None
         output=""
         for thread,count,tags,title in threads_tally[flow]:
             if count<3: break
@@ -38,41 +38,50 @@ class TextEmail(BaseClasses.BaseOutput):
         return output
 
     def MakeFlowSection(self,flow,config, products):
-        output="""
-${flow}
---------
-There have been ${n_messages} new messages in the ${hours} hours since ${start}
-
-= Tags =
-${tags_table}
-
-= Mentions =
-${mentions_table}
-
-== Longest Threads ==
-${thread_table}
-
-"""
-        template=Template(output)
+        n_msg=products['SimpleSummaryData'].n_messages[flow]
+        if n_msg<1: return ""
         hours=config.get('source','date_offset')
-        params={
-                'flow':flow,
-                'n_messages':products['SimpleSummaryData'].n_messages[flow],
-                'hours': hours,
-                'start':(datetime.now() -
-                    timedelta(hours=int(hours))).strftime("%c"),
-                'tags_table':self.MakeTagsTable(products['TallyTags'].tags,flow),
-                'mentions_table':self.MakeTagsTable(products['TallyTags'].mentions,flow),
-                'thread_table':self.MakeThreadsTable(products['LargestThread'].threads,flow)
-                }
-        return template.substitute(params)
+
+        output=flow+"\n"
+        output+=''.join(['-']*len(flow))
+        output+="\n"
+        output+="There ha" + ("s" if n_msg==1 else "ve") + " been "
+        output+=str(n_msg)+" new message" + ("s" if n_msg > 1 else "")
+        output+=" in the "+str(hours)+ " hours since "
+        output+=(datetime.now() - timedelta(hours=int(hours))).strftime("%c")
+        output+="\n"
+        output+="\n"
+
+        # Get the tags for this flow
+        sect=self.MakeTagsTable(products['TallyTags'].tags,flow)
+        if sect: 
+            output+="= Tags =\n"
+            output+=sect
+            output+="\n"
+
+        # Get the mentions for this flow
+        sect=self.MakeTagsTable(products['TallyTags'].mentions,flow)
+        if sect: 
+            output+="= Mentions =\n"
+            output+=sect
+            output+="\n"
+
+        # Get the longes threads for this flow
+        sect=self.MakeThreadsTable(products['LargestThread'].threads,flow)
+        if sect: 
+            output+="= Threads =\n"
+            output+=sect
+            output+="\n"
+
+        return output
 
     def CompileOutput(self,flows,config, products):
         # Prepare the message
         complete="Summary of FlowDock activity"
-        complete+=" for "+datetime.today().strftime("%A %d-%b-%Y %Z")+"\n"
+        complete+=" for "+datetime.today().strftime("%A %d-%b-%Y %Z")+"\n\n"
         for flow in flows:
             complete+=self.MakeFlowSection(flow,config,products)
+        #complete+=self.MakeFlowEmails(flows)
         complete+="""
 ---- Made using FlowMeter ( github.com/BenKrikler/FlowMeter )
         """
