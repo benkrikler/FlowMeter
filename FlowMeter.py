@@ -16,14 +16,18 @@ class FlowData():
     messages={}
     users={}
     threads=[]
+    info=()
 
 def GetAllFlows(date_offset, flowdock, flows):
     flowData=defaultdict(FlowData)
-    for org_flow in flows:
-        [org,flow]=org_flow.split("/",1)
+    flow_orgs=[ flow['organization']['parameterized_name'] for flow in flows]
+    flow_names=[ flow['parameterized_name'] for flow in flows]
+    for [org,flow,info] in zip(flow_orgs,flow_names,flows):
+        org_flow=org+"/"+flow
         flowData[org_flow].messages = flowdock.GetMessages(date_offset,org,flow)
         flowData[org_flow].users = flowdock.GetUsers(org,flow)
         flowData[org_flow].threads = flowdock.GetThreads(org,flow)
+        flowData[org_flow].info = info
     return flowData
 
 def GetInstances(class_list, base_class):
@@ -69,10 +73,9 @@ def Main(config):
     # Get all new messages for each requested flow
     date_offset=config.getfloat("source","date_offset")
     if config.has_option("source","all_flows") and config.getboolean("source","all_flows"):
-            flows=[ flow['organization']['parameterized_name'] +"/"+ flow['parameterized_name'] for flow in allFlows ]
+            flows=allFlows
     else: 
-            flows=config.get("source","flows").split()
-    print flows
+            flows=[ flow for flow in allFlows if flow['organization']['parameterized_name'] +"/"+ flow['parameterized_name'] in config.get("source","flows").split() ]
     flowData = GetAllFlows(date_offset,flowdock,flows )
 
     # Make each requested product 
@@ -81,7 +84,7 @@ def Main(config):
 
     # Lastly, compile and send / upload each output
     for name, output in outputs.iteritems():
-        output.CompileOutput(flowData.keys(),config,products)
+        output.CompileOutput( flowData.keys(),config,products)
 
 
 if __name__ == "__main__":
