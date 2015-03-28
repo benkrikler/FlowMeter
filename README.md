@@ -1,6 +1,6 @@
 FlowMeter
 ----
-A tool to sumarize set of [FlowDock](https://www.flowdock.com) flows.
+A tool to summarize set of [FlowDock](https://www.flowdock.com) flows.
 
 Configuration
 -------------
@@ -12,8 +12,16 @@ The following is an example config file:
 # myConfig.cfg
 [source]
 token= <your flowdock private token>
-flows= < space separated list of flows (including the organisation) >
 date_offset= < the number of hours to look for messages from >
+
+# You can either a give a list of flows to summarize:
+flows= < space separated list of flows (including the organisation) >
+# or you can summarize all flows, but skip a few
+all_flows=True
+skip_flows=< space separated list of flows (including the organisation) >
+
+# Ignore several specific tags:
+skip_tags=< space separated list of tags (normally lower case) >
 
 [output]
 outputs=<A space separated list of output modules to run.  Currentl only TextEmail is available>
@@ -26,27 +34,31 @@ to=< A space separted list of email addresses to send the outputs to >
 
 Outputs
 -------
-(NOTE: This is only partially implemented at this point, 4 March 2015)
 Would like to see:
 - Number of comments in each flow
-- Comparison to last fortnight's activity
 - Tally of tags mentioned
 - Tally of comments from people
-- List of files attached w/ links to get them
-- non-tagged keywords
 Want to link everything back to flowdock APP
 Distribute data:
  - Email (plan text)
  - Email (html)
  - Web-page
 
+Some future ideas:
+- Comparison to last fortnight's activity
+- Special section for new members 
+- Special section for @everyone comments
+- List of files attached w/ links to get them
+- Frequency of all words, including non-tagged items (excluding common words
+  like 'the', 'and' etc).
+
 Code structure
 --------------
-1. Get latest activity
+1. Select outputs
+   - Outputs state the products they need
+2. Get latest activity
    - Latest is since last update (probably nightly)
    - Stored locally (how do you best store json objects ?)
-2. Select outputs
-   - Outputs state the products they need
 3. Make products
    - Init each producer
    - For each JSON object, run each producer
