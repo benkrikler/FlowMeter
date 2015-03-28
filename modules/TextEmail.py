@@ -86,6 +86,12 @@ class TextEmail(BaseClasses.BaseOutput):
             output+="  Join: "+email_product.join_urls[flow]+"\n"
             output+="  Email: "+email_product.emails[flow]+"\n"
             output+="\n"
+        output+="""
+You can email directly to any flow using the emails above.  To tag the email,
+add "+tagname" before the '@' symbol.  To mention someone, add '.person' before
+the '@' symbol.  So for example, to email a flow called death-star, mention luke
+and tag it with the force write to: death-star.luke+use_force@jedis.flowdock.com
+"""
         return output
 
     def CompileOutput(self,flows,config, products):
