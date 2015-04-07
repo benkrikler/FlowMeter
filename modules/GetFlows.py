@@ -24,8 +24,8 @@ class Connection():
                 service=service)
 
     @retry(requests.exceptions.ConnectionError, tries=4, delay=3, backoff=2)
-    def Request(self,url,**kwargs):
-        r=requests.get(url, auth=(self.token,""),params=kwargs); 
+    def Request(self,url,token=None,**kwargs):
+        r=requests.get(url, auth=(self.token if not token else token ,""),params=kwargs); 
         return r.json()
 
     def GetMessages(self,date_offset,organisation,flow):
