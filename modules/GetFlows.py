@@ -35,7 +35,6 @@ class Connection():
 
         # What's the date we want to stop at?
         stop_time=datetime.now() - timedelta(hours=date_offset)
-        #print(stop_time)
 
         # Pull messages until we've reached the requested time offset
         reachedDesiredDate=False
@@ -47,6 +46,12 @@ class Connection():
             params={'limit':100}
             if last_id != -1: params['until_id']=last_id
             objects=self.Request(url,**params)
+            if len(objects) == 0:
+                    # No more messages in the flow
+                    break
+            if type(objects) is not list:
+                    reachedDesiredDate=True
+                    break
 
             # Reverse iterate  to check if we've  got all that we  need to reach
             # our requested time limit
@@ -60,7 +65,6 @@ class Connection():
                 new_messages[obj["id"]]=(obj)
                 self.GetThreadHeads([ thread_re.match(tag).group(1) for tag in obj["tags"] if thread_re.match(tag) ],
                 organisation,flow)
-        #print(obj["tags"])
         return new_messages
 
     def GetUsers(self,organisation,flow):
@@ -86,6 +90,15 @@ class Connection():
         url=REST_API_URL+"/flows/all"
         objs= self.Request(url,users=1)
         for obj in objs: 
-                if obj['access_mode']!="organization":
-                        objs.remove(obj)
+            if obj['access_mode']!="organization":
+                objs.remove(obj)
+            else:
+                # Make sure we're able to access the flow
+                url=REST_API_URL+"/flows/"
+                url+=obj['organization']['parameterized_name'] 
+                url+="/"+ obj['parameterized_name']
+                url+="/invitations"
+                invites=self.Request(url)
+                if type(invites) is not list:
+                    objs.remove(obj)
         return objs
