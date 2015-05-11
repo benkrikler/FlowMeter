@@ -23,14 +23,17 @@ class TallyTags(BaseClasses.BaseProduct):
     def __init__(self):
         BaseClasses.BaseProduct.__init__(self)
         self.tags     = defaultdict(list)
+        self.links     = defaultdict(list)
+        self.files     = defaultdict(list)
         self.threads  = defaultdict(list,"")
         self.mentions = defaultdict(list)
 
     def ProcessData(self, flowData,config):
         mention_re=re.compile(r":user:(\d+)")
-        everyone_re=re.compile(r":user:(everyone|everybody|all|anyone|anybody)")
+        everyone_re=re.compile(r":user:(team|everyone|everybody|all|anyone|anybody)")
         thread_re=re.compile(r"influx:(\d+)")
         unread_re=re.compile(r":unread:(\d+)")
+        #file_re=re.compile(r":file")
         skip_tags=[]
         if config.has_option("source","skip_tags"):
                 skip_tags=config.get("source","skip_tags").split()
@@ -58,9 +61,12 @@ class TallyTags(BaseClasses.BaseProduct):
                    # print(user['id'],user['nick'])
                     self.mentions[flow].append(("@"+user['nick'],count) )
                 elif everyone_re.match(tag): 
-                    self.mentions[flow].append(("@everyone",count) )
+                    self.mentions[flow].append(("@Team",count) )
                 elif thread_re.match(tag): continue
                 elif tag == ":thread": continue
+                elif tag == ":file": continue
+                elif tag == ":url": 
+                    continue
                 elif unread_re.match(tag): continue
                 else :
                     self.tags[flow].append( (tag,count) )
@@ -78,37 +84,18 @@ class SimpleSummaryData(BaseClasses.BaseProduct):
 class LargestThread(BaseClasses.BaseProduct):
     def __init__(self):
         BaseClasses.BaseProduct.__init__(self)
-        self.threads  = defaultdict(dict)
-        self.tag_filter=TagsFilter()
-
+        # key = flow_name
+        # value = (thread id, counts, title )
+        self.threads  = defaultdict(list)
 
     def ProcessData(self, flowData,config):
         # Get the list of threads
-        thread_re=re.compile(r"influx:(\d+)")
         for flow, data in flowData.iteritems():
             threads=[]
             # For each thread, check how many messages are attached and who commented
-            thread_count=defaultdict(int)
-            thread_tags=defaultdict(set)
-            for iid, msg in data.messages.iteritems():
-                thread_id=[ thread_re.match(tag).group(1) for tag in msg['tags'] if thread_re.match(tag) ]
-                if len(thread_id) >0:
-                    thread_id=thread_id[0]
-                    thread_count[thread_id]+=1
-                    thread_tags[thread_id].update(msg['tags'])
-                    thread_tags[thread_id].add("@"+data.users[int(msg['user'])]['nick'])
-
-            # sort by count
-            ids=sorted(thread_count.items(),
+            for thread_id, thread_data in data.threads.iteritems():
+                print (flow, thread_id, thread_data['internal_comments'], thread_data['title'] )
+                threads.append( (thread_id, thread_data['internal_comments'], thread_data['title'] ))
+            self.threads[flow]=sorted(threads,
                               reverse=True,
                               key=operator.itemgetter(1))
-            for thread_id,count in ids:
-                content=data.threads[thread_id]["content"]
-                if not isinstance(content,basestring): continue
-                content=content.split()
-                content=" ".join(content[0:10]) + ( r"..." if len(content) > 10 else "" )
-                threads.append( (thread_id, count,
-                                 self.tag_filter.Apply(thread_tags[thread_id],
-                                                       data.users),
-                                 content ) )
-            self.threads[flow]=threads

@@ -17,13 +17,13 @@ class FlowData():
     threads=[]
     info=()
 
-def GetAllFlows(date_offset, flowdock, flows):
+def GetAllFlows( flowdock, flows):
     flowData=defaultdict(FlowData)
     flow_orgs=[ flow['organization']['parameterized_name'] for flow in flows]
     flow_names=[ flow['parameterized_name'] for flow in flows]
     for [org,flow,info] in zip(flow_orgs,flow_names,flows):
         org_flow=org+"/"+flow
-        flowData[org_flow].messages = flowdock.GetMessages(date_offset,org,flow)
+        flowData[org_flow].messages = flowdock.GetMessages(org,flow)
         flowData[org_flow].users = flowdock.GetUsers(org,flow)
         flowData[org_flow].threads = flowdock.GetThreads(org,flow)
         flowData[org_flow].info = info
@@ -66,11 +66,11 @@ def Main(config):
     print("Products that will be created: "+ str(products.keys()))
 
     # Get all available flows for this token that are organisation wide:
-    flowdock=GetFlows.Connection(config.get("source","token"))
+    date_offset=config.getfloat("source","date_offset")
+    flowdock=GetFlows.Connection(config.get("source","token"),date_offset)
     allFlows=flowdock.GetFlows()
 
     # Get all new messages for each requested flow
-    date_offset=config.getfloat("source","date_offset")
     if config.has_option("source","all_flows") and config.getboolean("source","all_flows"):
             flows=allFlows
     else: 
@@ -79,7 +79,7 @@ def Main(config):
             skip_flows=config.get("source","skip_flows").split()
             flows=[ flow for flow in flows if flow['organization']['parameterized_name'] +"/"+flow['parameterized_name'] not in skip_flows]
     print("Flows to be summarised: "+str([ flow['parameterized_name'] for flow in flows]))
-    flowData = GetAllFlows(date_offset,flowdock,flows )
+    flowData = GetAllFlows(flowdock,flows )
 
     # Make each requested product 
     for name, product in products.iteritems():

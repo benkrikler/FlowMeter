@@ -30,14 +30,14 @@ class TextEmail(BaseClasses.BaseOutput):
         if len(threads_tally[flow]) == 0:
             return None
         output=""
-        for thread,count,tags,title in threads_tally[flow]:
-            if count<3: break
+        for thread,count,title in threads_tally[flow]:
+            if count<3: continue
             tmp=""
             url=self.MakeURL(flow+"/messages/"+str(thread))
             tmp+=u"* \"{}\"\n"
-            tmp+=u"     Replies: {: <3}, Tags:{}\n"
+            tmp+=u"     Replies: {: <3}\n"
             tmp+=u"{}\n\n"
-            output+=tmp.format( title, count, ", ".join(tags), url)
+            output+=tmp.format( title, count,  url)
         return output
 
     def MakeFlowSection(self,flow,config, products):

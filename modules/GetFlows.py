@@ -11,10 +11,15 @@ TIME_FORMAT="%Y-%m-%dT%H:%M:%S.%fZ"
 class Connection():
     """ A class to manage connecting to flowdock"""
 
-    def __init__(self, token):
+    def __init__(self, token,date_offset):
         self.token=token
         self.decoder=json.JSONDecoder()
         self.threads=defaultdict(dict)
+        self.last_id={}
+        # What's the date we want to stop at?
+        self.date_offset=date_offset
+        self.stop_time=datetime.now() - timedelta(hours=self.date_offset)
+
 
     def MakeURL(self,organisation,flow,service):
         return "{base}/flows/{organisation}/{flow}/{service}".format(
@@ -28,13 +33,10 @@ class Connection():
         r=requests.get(url, auth=(self.token if not token else token ,""),params=kwargs); 
         return r.json()
 
-    def GetMessages(self,date_offset,organisation,flow):
+    def GetMessages(self,organisation,flow):
         """ Get all the flows since date """
         # prepare the target URL
         url=self.MakeURL(organisation,flow,"messages")
-
-        # What's the date we want to stop at?
-        stop_time=datetime.now() - timedelta(hours=date_offset)
 
         # Pull messages until we've reached the requested time offset
         reachedDesiredDate=False
@@ -58,13 +60,15 @@ class Connection():
             for obj in reversed(objects):
                 created_at=datetime.strptime(obj["created_at"],TIME_FORMAT)
                 last_id=int(obj["id"])
-                if created_at < stop_time:
+                if created_at < self.stop_time:
                     reachedDesiredDate=True
                     break
                 # Valid new message so keep it
                 new_messages[obj["id"]]=(obj)
                 self.GetThreadHeads([ thread_re.match(tag).group(1) for tag in obj["tags"] if thread_re.match(tag) ],
                 organisation,flow)
+                
+        self.last_id[flow]=last_id
         return new_messages
 
     def GetUsers(self,organisation,flow):
@@ -84,7 +88,11 @@ class Connection():
             self.threads[organisation+"/"+flow][thread]=obj
 
     def GetThreads(self,organisation,flow):
-        return self.threads[organisation+"/"+flow]
+        url=self.MakeURL(organisation,flow,"threads")
+
+        # get the users list
+        objs= self.Request(url,since=datetime.strftime(self.stop_time,TIME_FORMAT))
+        return dict(zip( [ obj['initial_message'] for obj in objs], objs ))
 
     def GetFlows(self):
         url=REST_API_URL+"/flows/all"
